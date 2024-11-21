@@ -1,0 +1,20 @@
+CREATE TABLE raw_wfp (
+    adm0_id TEXT,
+    adm0_name TEXT,
+    adm1_id TEXT,
+    adm1_name TEXT,
+    mkt_id TEXT,
+    mkt_name TEXT,
+    cm_id TEXT,
+    cm_name TEXT,
+    cur_id TEXT,
+    cur_name TEXT,
+    pt_id TEXT,
+    pt_name TEXT,
+    um_id TEXT,
+    um_name TEXT,
+    mp_month TEXT,
+    mp_year TEXT,
+    mp_price TEXT,
+    mp_commoditysource TEXT
+);
