@@ -1,0 +1,13 @@
+market_flow:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      user: airflow
+      password: airflow
+      dbname: market_flow
+      schema: public
+      port: 5432
+      threads: 4
+
