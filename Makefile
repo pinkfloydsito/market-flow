@@ -2,6 +2,12 @@ COMPOSE_FILE := docker-compose.airflow.yml
 AIRFLOW_CONTAINER := airflow-worker
 AIRFLOW_SCHEDULER := airflow-scheduler
 
+DBT_CONTAINER := airflow-worker
+
+DBT_PROJECT_DIR := /opt/dbt_market_flow
+DBT_PROFILE := dbt_market_flow
+DBT_TARGET := dev
+
 .PHONY: help
 help:
 	@echo "Makefile targets:"
@@ -10,6 +16,11 @@ help:
 	@echo "  bash         - Open bash in the Airflow scheduler container"
 	@echo "  dags         - Trigger the Airflow DAGs"
 	@echo "  logs         - View logs from the scheduler container"
+	@echo "  dbt-run              - Run DBT models"
+	@echo "  dbt-test             - Run DBT tests"
+	@echo "  dbt-clean            - Clean DBT target artifacts"
+	@echo "  dbt-docs-generate    - Generate DBT documentation"
+	@echo "  dbt-docs-serve       - Serve DBT documentation"
 
 .PHONY: all up down exec start_dags
 
@@ -39,3 +50,23 @@ start_project: up start_dags
 .PHONY: logs
 logs:
 	docker compose -f $(COMPOSE_FILE) logs $(AIRFLOW_CONTAINER) -f
+
+dbt-run:
+	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt run --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles --target $(DBT_TARGET)
+	@echo "DBT models executed successfully."
+
+dbt-test:
+	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt test --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles --target $(DBT_TARGET)
+	@echo "DBT tests executed successfully."
+
+dbt-clean:
+	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt clean --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles
+	@echo "DBT target artifacts cleaned."
+
+dbt-docs-generate:
+	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt docs generate --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles --target $(DBT_TARGET)
+	@echo "DBT documentation generated."
+
+dbt-docs-serve:
+	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt docs serve --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles --target $(DBT_TARGET)
+	@echo "DBT documentation server is running."
