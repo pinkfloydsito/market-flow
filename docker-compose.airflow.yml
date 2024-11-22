@@ -55,6 +55,7 @@ x-airflow-common:
   environment:
     &airflow-common-env
     DBT_PROFILES_DIR: /opt/dbt_market_flow/profiles
+    DBT_PROJECT_DIR: /opt/dbt_market_flow
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow

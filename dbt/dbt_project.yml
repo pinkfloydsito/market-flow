@@ -1,0 +1,21 @@
+name: market_flow
+version: 1.0.0
+
+profile: market_flow
+config-version: 2
+
+target-path: "target"
+
+model-paths: ["models"]
+
+seed-paths: ["seeds"]
+
+test-paths: ["tests"]
+
+models:
+  market_flow:
+    core:
+      # schema: core
+      +materialized: table
+
+log-path: logs
