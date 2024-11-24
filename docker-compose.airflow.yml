@@ -52,6 +52,8 @@ x-airflow-common:
   build:
     context: .
     dockerfile: Dockerfile.airflow
+  env_file:
+    - .env
   environment:
     &airflow-common-env
     DBT_PROFILES_DIR: /opt/dbt_market_flow/profiles
