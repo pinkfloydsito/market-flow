@@ -84,6 +84,9 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ./dbt:/opt/dbt_market_flow
     - ./backups:/opt/backups
+    - ./services:/opt/airflow/services
+    - ./api:/opt/airflow/api
+    - ./db:/opt/airflow/db
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on

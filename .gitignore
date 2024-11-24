@@ -425,3 +425,4 @@ airflow-build-dockerfile*
 /uv.lock
 
 backups/
+.cache.*

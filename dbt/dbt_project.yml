@@ -17,5 +17,19 @@ models:
     core:
       # schema: core
       +materialized: table
+    core_duckdb:
+      +materialized: table
+      +schema: analytics
+    weather:
+      +materialized: table
+      +schema: analytics
 
 log-path: logs
+on-run-start:
+  - 'INSTALL postgres;'
+  - 'LOAD postgres;'
+  - "SET postgres_host='postgres';"
+  - "SET postgres_port=5432;"
+  - "SET postgres_user='airflow';"
+  - "SET postgres_password='airflow';"
+  - "SET postgres_database='market_flow';"
