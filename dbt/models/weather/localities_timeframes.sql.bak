@@ -1,0 +1,26 @@
+{{ config(materialized='table') }}
+
+WITH transactions_data AS (
+    SELECT
+        t.year,
+        t.month,
+        l.latitude,
+        l.longitude,
+        l.name as state_name,
+        c.name AS country_name
+    FROM {{ ref('core','transactions') }} t
+    LEFT JOIN markets m on t.market_id=m.id
+    LEFT JOIN localities l ON l.id = m.locality_id
+    LEFT JOIN countries c ON l.country_id = c.id
+    WHERE year IS NOT NULL
+      AND month IS NOT NULL
+      AND year >= 2016 -- TODO: CHECK (this issue with the history)
+)
+SELECT DISTINCT
+    year,
+    month,
+    latitude,
+    longitude
+FROM transactions_data
+ORDER BY year, month
+

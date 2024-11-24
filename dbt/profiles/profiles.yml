@@ -10,3 +10,9 @@ market_flow:
       schema: public
       port: 5432
       threads: 4
+    duckdb:
+      type: duckdb
+      path: "/opt/airflow/db/analytics.duckdb"
+      schema: analytics 
+      extensions:
+        - postgres
