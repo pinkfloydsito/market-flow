@@ -16,3 +16,7 @@ market_flow:
       schema: analytics 
       extensions:
         - postgres
+        - postgres_scanner
+      attach:
+        - path: postgresql://airflow:airflow@postgres/market_flow
+          type: postgres
