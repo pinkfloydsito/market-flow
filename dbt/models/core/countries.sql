@@ -1,6 +1,15 @@
 WITH country_union AS (
     SELECT
-        DISTINCT country AS name,
+        DISTINCT 
+        CASE
+            WHEN country = 'Iran (Islamic Republic of)' THEN 'Iran'
+            WHEN country = 'State of Palestine' THEN 'Palestine'
+            ELSE TRIM(
+          REGEXP_REPLACE(
+              REGEXP_REPLACE(country, '[^a-zA-Z0-9\s''\-\(\)]', '', 'g'),
+              '\s+', ' ', 'g'
+          )
+        ) END AS name,
         iso3,
         1 AS has_hdi,
         0 AS has_wfp
@@ -9,7 +18,16 @@ WITH country_union AS (
     UNION
 
     SELECT
-        DISTINCT adm0_name AS name,
+        DISTINCT 
+        CASE
+            WHEN adm0_name = 'Iran (Islamic Republic of)' THEN 'Iran'
+            WHEN adm0_name = 'State of Palestine' THEN 'Palestine'
+            ELSE TRIM(
+              REGEXP_REPLACE(
+                  REGEXP_REPLACE(adm0_name, '[^a-zA-Z0-9\s''\-\(\)]', '', 'g'),
+                  '\s+', ' ', 'g'
+              )
+            ) END AS name,
         NULL AS iso3,
         0 AS has_hdi,
         1 AS has_wfp
