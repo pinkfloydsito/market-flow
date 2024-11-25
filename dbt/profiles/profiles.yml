@@ -18,5 +18,7 @@ market_flow:
         - postgres
         - postgres_scanner
       attach:
-        - path: postgresql://airflow:airflow@postgres/market_flow
+        # path: postgresql://airflow:airflow@postgres:5432/market_flow
+        - path: 'dbname=market_flow host=postgres port=5432 user=airflow password=airflow'
+          alias: pg
           type: postgres

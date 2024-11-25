@@ -62,3 +62,56 @@ daily_data["precipitation_hours"] = daily_precicipitation_hours
 
 daily_dataframe = pd.DataFrame(data=daily_data)
 print(daily_dataframe)
+
+
+import duckdb
+
+# Path to your DuckDB database file
+db_path = "/opt/dbt_market_flow/database.duckdb"
+
+# Connect to DuckDB
+conn = duckdb.connect(db_path)
+
+# Install and load the Postgres extension
+conn.execute("INSTALL postgres;")
+conn.execute("LOAD postgres;")
+
+# Attach the Postgres database
+attach_query = """
+ATTACH 'dbname=market_flow user=airflow host=postgres password=airflow' 
+AS db (TYPE POSTGRES, READ_ONLY);
+"""
+conn.execute(attach_query)
+
+# Query a table from Postgres
+result = conn.execute("SELECT * FROM db.public.transactions LIMIT 10").fetchdf()
+print(result)
+
+# Close the connection
+conn.close()
+
+
+import duckdb
+
+db_path = ":memory:"
+conn = duckdb.connect(db_path)
+
+conn.execute("INSTALL postgres;")
+conn.execute("LOAD postgres;")
+
+try:
+    conn.execute("""
+        ATTACH 'postgresql://airflow:airflow@postgres:5432/market_flow' 
+        AS db (TYPE POSTGRES, READ_ONLY);
+    """)
+    print("Connection to Postgres successful!")
+except Exception as e:
+    print(f"Failed to connect to Postgres: {e}")
+
+try:
+    result = conn.execute("SELECT * FROM db.public.transactions LIMIT 5").fetchdf()
+    print(result)
+except Exception as e:
+    print(f"Failed to query Postgres: {e}")
+
+conn.close()

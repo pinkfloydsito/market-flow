@@ -17,7 +17,7 @@ models:
     core:
       # schema: core
       +materialized: table
-    core_duckdb:
+    duckdb:
       +materialized: table
       +schema: analytics
     weather:
