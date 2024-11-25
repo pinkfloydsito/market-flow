@@ -2,23 +2,34 @@ market_flow:
   target: dev
   outputs:
     dev:
-      type: postgres
-      host: postgres
-      user: airflow
-      password: airflow
-      dbname: market_flow
-      schema: public
-      port: 5432
-      threads: 4
-    duckdb:
       type: duckdb
       path: "/opt/airflow/db/analytics.duckdb"
-      schema: analytics 
-      extensions:
-        - postgres
-        - postgres_scanner
-      attach:
-        # path: postgresql://airflow:airflow@postgres:5432/market_flow
-        - path: 'dbname=market_flow host=postgres port=5432 user=airflow password=airflow'
-          alias: pg
-          type: postgres
+      schema: public
+  extensions:
+    - postgres
+    - postgres_scanner
+
+# market_flow:
+#   target: dev
+#   outputs:
+#     dev:
+#       type: postgres
+#       host: postgres
+#       user: airflow
+#       password: airflow
+#       dbname: market_flow
+#       schema: public
+#       port: 5432
+#       threads: 4
+#     duckdb:
+#       type: duckdb
+#       path: "/opt/airflow/db/analytics.duckdb"
+#       schema: analytics 
+#       extensions:
+#         - postgres
+#         - postgres_scanner
+#       attach:
+#         # path: postgresql://airflow:airflow@postgres:5432/market_flow
+#         - path: 'dbname=market_flow host=postgres port=5432 user=airflow password=airflow'
+#           alias: pg
+#           type: postgres

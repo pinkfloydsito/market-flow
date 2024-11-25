@@ -1,0 +1,31 @@
+version: 2
+sources:
+  - name: external
+    # meta:
+    #   external_location: "/opt/airflow/dags/data/raw_hdi.csv"
+    tables:
+      - name: raw_hdi
+        meta:
+          external_location: "/opt/airflow/dags/data/raw_hdi.csv"
+        external:
+          location: "/opt/airflow/dags/data/raw_hdi.csv"
+          format: csv
+          options:
+            header: true
+            delimiter: ","
+            encoding: "ISO-8859-1"
+      - name: raw_wfp
+        meta:
+          external_location: "/opt/airflow/dags/data/raw_wfp_utf-8.csv"
+          options:
+            header: true
+            delimiter: ","
+            encoding: "utf-8"
+        external:
+          location: "/opt/airflow/dags/data/raw_wfp.csv"
+          format: csv
+          options:
+            header: true
+            delimiter: ","
+            encoding: "utf-8"
+

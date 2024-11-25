@@ -426,3 +426,8 @@ airflow-build-dockerfile*
 
 backups/
 .cache.*
+
+*.duckdb
+raw_wfp_*.csv
+
+*.bak
