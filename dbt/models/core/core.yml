@@ -1,8 +1,1 @@
 version: 2
-
-sources:
-  - name: core
-    schema: public
-    tables:
-      - name: raw_hdi
-      - name: raw_wfp

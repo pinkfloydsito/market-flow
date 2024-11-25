@@ -15,19 +15,9 @@ test-paths: ["tests"]
 models:
   market_flow:
     core:
-      # schema: core
       +materialized: table
-    duckdb:
+    raw:
       +materialized: table
-      +schema: analytics
-    weather:
+    analytics:
       +materialized: table
-      +schema: analytics
-
 log-path: logs
-vars:
-  postgres_host: 'postgres'
-  postgres_port: 5432
-  postgres_user: 'airflow'
-  postgres_password: 'airflow'
-  postgres_database: 'market_flow'

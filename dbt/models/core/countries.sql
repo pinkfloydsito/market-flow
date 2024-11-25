@@ -5,15 +5,15 @@ WITH country_union AS (
             WHEN country = 'Iran (Islamic Republic of)' THEN 'Iran'
             WHEN country = 'State of Palestine' THEN 'Palestine'
             ELSE TRIM(
-          REGEXP_REPLACE(
-              REGEXP_REPLACE(country, '[^a-zA-Z0-9\s''\-\(\)]', '', 'g'),
-              '\s+', ' ', 'g'
-          )
-        ) END AS name,
+                REGEXP_REPLACE(
+                    REGEXP_REPLACE(country, '[^a-zA-Z0-9\s''\-\(\)]', ''),
+                    '\s+', ' '
+                )
+            ) END AS name,
         iso3,
         1 AS has_hdi,
         0 AS has_wfp
-    FROM {{ source('core', 'raw_hdi') }}
+        FROM {{ ref('cleaned_hdi') }}
 
     UNION
 
@@ -23,15 +23,15 @@ WITH country_union AS (
             WHEN adm0_name = 'Iran (Islamic Republic of)' THEN 'Iran'
             WHEN adm0_name = 'State of Palestine' THEN 'Palestine'
             ELSE TRIM(
-              REGEXP_REPLACE(
-                  REGEXP_REPLACE(adm0_name, '[^a-zA-Z0-9\s''\-\(\)]', '', 'g'),
-                  '\s+', ' ', 'g'
-              )
+                REGEXP_REPLACE(
+                    REGEXP_REPLACE(adm0_name, '[^a-zA-Z0-9\s''\-\(\)]', ''),
+                    '\s+', ' '
+                )
             ) END AS name,
         NULL AS iso3,
         0 AS has_hdi,
         1 AS has_wfp
-    FROM {{ source('core', 'raw_wfp') }}
+        FROM {{ ref('cleaned_wfp') }}
 ),
 deduplicated_countries AS (
     SELECT 
@@ -46,7 +46,8 @@ SELECT
     ROW_NUMBER() OVER (ORDER BY name) AS id,
     name,
     iso3,
-    has_hdi::INTEGER AS has_hdi,
-    has_wfp::INTEGER AS has_wfp
+    CAST(has_hdi AS INTEGER) AS has_hdi,
+    CAST(has_wfp AS INTEGER) AS has_wfp
 FROM deduplicated_countries
 ORDER BY name
+
