@@ -6,3 +6,4 @@ RUN pip install dbt-core dbt-postgres dbt-duckdb
 # dependecies related to open-meteo
 RUN pip install openmeteo-requests
 RUN pip install requests-cache retry-requests numpy pandas
+RUN pip install scikit-learn

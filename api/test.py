@@ -9,7 +9,15 @@ start_date = datetime(2023, 1, 1)  # Start of January 2023
 end_date = datetime(2023, 1, 31)  # End of January 2023
 month = 1
 
+latitude = 25
+longitude = 11
+year = 2020
+start_date = datetime(year, 6, 1)  # Start of January 2023
+end_date = datetime(year, 6, 29)  # End of January 2023
+month = 6
+
 weather_data = api.fetch_weather_data(latitude, longitude, start_date, end_date, month)
+weather_data
 
 print(weather_data)
 
@@ -115,3 +123,19 @@ except Exception as e:
     print(f"Failed to query Postgres: {e}")
 
 conn.close()
+
+
+import pandas as pd
+import duckdb
+
+db_path = "./db/analytics.duckdb"
+conn = duckdb.connect(db_path)
+
+query = "select * from public.units;"
+
+pd.set_option("display.max_rows", None)
+
+df = conn.execute(query).fetchdf()
+df["name"]
+
+df.to_csv("units.csv", index=False)

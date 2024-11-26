@@ -28,6 +28,10 @@ up:
 	docker-compose -f $(COMPOSE_FILE) up -d
 	@echo "Docker Compose is up and running."
 
+build-up:
+	docker-compose -f $(COMPOSE_FILE) up -d --build
+	@echo "Docker Compose is up built, and running."
+
 down:
 	docker-compose -f $(COMPOSE_FILE) down
 	@echo "Docker Compose stopped and cleaned up."
