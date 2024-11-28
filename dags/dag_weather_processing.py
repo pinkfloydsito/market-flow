@@ -215,10 +215,10 @@ with DAG(
     catchup=False,
     tags=["duckdb", "dbt", "weather"],
 ) as dag:
-    # fetch_and_store_task = PythonOperator(
-    #     task_id="fetch_and_store_weather",
-    #     python_callable=fetch_and_store_weather,
-    # )
+    fetch_and_store_task = PythonOperator(
+        task_id="fetch_and_store_weather",
+        python_callable=fetch_and_store_weather,
+    )
 
     impute_missing_data_task = PythonOperator(
         task_id="impute_missing_data",
@@ -231,7 +231,7 @@ with DAG(
     )
 
     (
-        # fetch_and_store_task
-        # >>impute_missing_data_task
-        impute_missing_data_task >> group_and_insert_cleaned_weather_data_task
+        fetch_and_store_task
+        >> impute_missing_data_task
+        >> group_and_insert_cleaned_weather_data_task
     )
