@@ -96,6 +96,18 @@ x-airflow-common:
       condition: service_healthy
 
 services:
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./db:/app/db
+      - ./server:/app/server
+      - ./sql:/app/sql
+    environment:
+      - PYTHONUNBUFFERED=1
   postgres:
     image: postgres:13
     environment:
