@@ -7,3 +7,6 @@ RUN pip install dbt-core dbt-postgres dbt-duckdb
 RUN pip install openmeteo-requests
 RUN pip install requests-cache retry-requests numpy pandas
 RUN pip install scikit-learn
+RUN pip install currencyapicom
+RUN pip install "sqlframe[duckdb]"
+
