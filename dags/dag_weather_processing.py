@@ -64,7 +64,7 @@ def get_localities():
         query = """
             WITH weather_data AS (
                 SELECT id, locality_id, latitude, longitude, month, year
-                FROM public.weather 
+                FROM public.raw_weather 
                 WHERE avg_temperature IS NULL
             )
 
@@ -77,7 +77,7 @@ def get_localities():
     else:
         query = """
         SELECT id, locality_id, latitude, longitude, month, year
-        FROM public.weather 
+        FROM public.raw_weather 
         WHERE avg_temperature IS NULL -- AND year >= 2016;
         """
 
@@ -175,7 +175,7 @@ def fetch_and_store_weather():
 
 
 def group_and_insert_cleaned_weather_data():
-    """Group weather data by locality_id, year, month, and insert into public.weather."""
+    """Group weather data by locality_id, year, month, and insert into public.raw_weather."""
     conn = duckdb.connect(DUCKDB_FILE)
 
     query = f"""
@@ -191,15 +191,15 @@ def group_and_insert_cleaned_weather_data():
         FROM read_csv_auto('{cleaned_csv_file_path}')
         GROUP BY locality_id, year, month
     )
-    UPDATE public.weather
+    UPDATE public.raw_weather
     SET 
         avg_temperature = agg.avg_temperature,
         precipitation = agg.precipitation
     FROM aggregated_data agg
     WHERE 
-        public.weather.locality_id = agg.locality_id
-        AND public.weather.year = agg.year
-        AND public.weather.month = agg.month;
+        public.raw_weather.locality_id = agg.locality_id
+        AND public.raw_weather.year = agg.year
+        AND public.raw_weather.month = agg.month;
     """
 
     conn.execute(query)
@@ -213,7 +213,7 @@ with DAG(
     schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
-    tags=["duckdb", "dbt", "weather"],
+    tags=["duckdb", "dbt", "raw_weather"],
 ) as dag:
     fetch_and_store_task = PythonOperator(
         task_id="fetch_and_store_weather",
