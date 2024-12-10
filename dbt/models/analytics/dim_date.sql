@@ -12,7 +12,7 @@ WITH dates AS (
     WHERE y.name IS NOT NULL AND m.name IS NOT NULL
 )
 SELECT
-    date_id,
+    date_id as id,
     year_id,
     year,
     month_id,
