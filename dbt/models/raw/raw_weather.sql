@@ -24,3 +24,4 @@ WHERE
     AND loc.longitude IS NOT NULL
 GROUP BY loc.id, loc.latitude, loc.longitude, wfp.mp_year, wfp.mp_month
 HAVING COUNT(*) > 1
+
