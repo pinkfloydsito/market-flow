@@ -431,3 +431,10 @@ backups/
 raw_wfp_*.csv
 
 *.bak
+*.bak*
+*schema.*
+output.*
+testing.*
+units.csv
+db/*.csv
+

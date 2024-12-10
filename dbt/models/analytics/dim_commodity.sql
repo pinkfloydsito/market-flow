@@ -3,6 +3,6 @@
 SELECT
     DISTINCT id,
     name
-FROM {{ ref('currencies') }}
+FROM {{ ref('commodities') }}
 WHERE name IS NOT NULL
 ORDER BY name

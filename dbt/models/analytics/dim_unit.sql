@@ -45,7 +45,7 @@ unit_conversions AS (
 )
 
 SELECT
-    unit_id,
+    unit_id as id,
     name,
     unit_in_kg
 FROM unit_conversions

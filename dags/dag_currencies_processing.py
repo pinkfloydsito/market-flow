@@ -65,13 +65,9 @@ def fetch_and_write_csv(**context):
     if not rows:
         return
 
-    # Distinct year/month combinations
-    year_month_set = set((r["year"], r["month"]) for r in rows)
-
     # We'll store results per (year,month) in a dictionary to avoid redundant API calls
-    fetched_data = {}  # key: (year, month), value: dict of {currency_code: value}
+    fetched_data = {}
 
-    # The CSV we will write to
     output_file = currency_historical_file_path
     existing_combinations = set()
 
@@ -84,31 +80,34 @@ def fetch_and_write_csv(**context):
     except FileNotFoundError:
         pass
 
+    file_exists = os.path.exists(output_file)
+
     # Prepare CSV file with header
     with open(output_file, "a+", newline="", encoding="utf-8") as f:
         writer = csv.writer(f, delimiter=",")
-        # Columns: currency_value_id, currency_code, year, month, value
-        # writer.writerow(
-        #     ["currency_value_id", "currency_code", "year", "month", "value"]
-        # )
+
+        f.seek(0)
+
+        if not file_exists or f.tell() == 0:
+            writer.writerow(
+                ["currency_value_id", "currency_code", "year", "month", "value"]
+            )
+
+        f.seek(0, 2)
 
         for r in rows:
             orig_year = r["year"]
             month = r["month"]
+
+            # TODO: check a better way for this
             # If year < 2000, we try to fetch from 2000 or reuse fetched values
             fetch_year = orig_year if orig_year >= 2000 else 2000
 
             year_month = (str(orig_year), str(month))
             if year_month in existing_combinations:
                 continue
-            currency_value_id = r["currency_value_id"]
 
-            logger.info(f"Fetching data for {year_month}...")
-            logger.info(f"keys -> {fetched_data.keys()}")
-
-            logger.info(f"debug {(fetch_year, month) not in fetched_data.keys()}")
             if (fetch_year, month) not in fetched_data.keys():
-                # Need to fetch new data
                 date = f"{fetch_year}-{month}-01"
                 result = client.historical(date)
                 currency_data = result["data"]
