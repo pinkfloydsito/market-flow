@@ -1,0 +1,5 @@
+[server]
+# headless = true
+
+# local development:
+runOnSave = true
