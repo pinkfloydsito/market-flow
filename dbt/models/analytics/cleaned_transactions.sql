@@ -22,7 +22,7 @@ units AS (
         unit_id,
         name AS unit_name,
         unit_in_kg
-    FROM {{ ref('cleaned_units') }}
+    FROM {{ ref('dim_unit') }}
 
 ),
 
