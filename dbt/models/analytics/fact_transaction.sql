@@ -19,7 +19,7 @@ WITH base_transactions AS (
     INNER JOIN {{ ref('dim_locality') }} loc
         ON mkt.locality_id = loc.id
     LEFT JOIN {{ ref('dim_unit') }} u
-        ON wfp.um_id = u.unit_id
+        ON wfp.um_id = u.id
     WHERE 
         wfp.mp_price IS NOT NULL
         AND wfp.mp_month IS NOT NULL
@@ -54,19 +54,30 @@ transactions_with_weather AS (
     LEFT JOIN {{ ref('dim_weather') }} w
     ON td.locality_id = w.locality_id
     AND td.dim_date_id = w.dim_date_id
+),
+transactions_with_currency_value AS (
+    SELECT
+        tw.*,
+        cv.id AS currency_value_id
+    FROM transactions_with_weather tw
+    INNER JOIN {{ ref('dim_currency_value') }} cv
+    ON tw.currency_id = cv.currency_id
+    WHERE tw.year = cv.year AND tw.month = cv.month AND cv.value IS NOT NULL
+
 )
 
 SELECT
     ROW_NUMBER() OVER () AS transaction_id, -- Auto-increment ID for fact table
-    market_id,
-    commodity_id,
-    currency_id,
-    unit_id,
+    market_id as dim_market_id,
+    commodity_id as dim_commodity_id,
+    currency_id as dim_currency_id,
+    currency_value_id,
+    unit_id as dim_unit_id,
     dim_date_id,
     weather_id,
-    locality_id,
+    locality_id as dim_locality_id,
     price,
     price_per_kg,
     commodity_source
-FROM transactions_with_weather
+FROM transactions_with_currency_value
 ORDER BY transaction_id
