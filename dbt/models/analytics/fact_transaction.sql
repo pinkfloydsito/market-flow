@@ -39,7 +39,7 @@ adjusted_transactions AS (
 transactions_with_date AS (
     SELECT
         at.*,
-        d.date_id AS dim_date_id
+        d.id AS dim_date_id
     FROM adjusted_transactions at
     LEFT JOIN {{ ref('dim_date') }} d
     ON at.year = d.year
@@ -74,7 +74,7 @@ SELECT
     currency_value_id,
     unit_id as dim_unit_id,
     dim_date_id,
-    weather_id,
+    weather_id as dim_weather_id,
     locality_id as dim_locality_id,
     price,
     price_per_kg,
