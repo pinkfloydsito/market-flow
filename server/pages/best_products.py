@@ -6,7 +6,7 @@ from forecast_utils import forecast_best_products
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-st.title("Market Flow - Best Products Analysis")
+st.title("Best Products Overview")
 
 df = load_data()
 

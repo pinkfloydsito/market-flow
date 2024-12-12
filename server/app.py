@@ -20,9 +20,11 @@ st.set_page_config(
 pg = st.navigation(
     [
         st.Page("./pages/dataset_viewer.py", title="Dataset Viewer"),
-        st.Page("./pages/best_products.py"),
-        st.Page("./pages/forecasting.py"),
-        st.Page("./pages/markets.py"),
+        st.Page("./pages/best_products.py", title="Best Products Overview"),
+        st.Page(
+            "./pages/single_product_forecasting.py", title="Forecasting for product"
+        ),
+        st.Page("./pages/best_markets.py", title="Best Markets Overview"),
     ]
 )
 pg.run()
