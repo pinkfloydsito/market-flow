@@ -41,7 +41,8 @@ def sql():
     INNER JOIN public.dim_weather dim_weather ON fact.dim_weather_id = dim_weather.id
     INNER JOIN public.dim_commodity dim_commodity ON fact.dim_commodity_id = dim_commodity.id
     INNER JOIN public.dim_currency dim_currency ON fact.dim_currency_id = dim_currency.id
-    INNER JOIN public.dim_currency_value dim_currency_value ON fact.dim_currency_value_id = dim_currency_value.id;
+    INNER JOIN public.dim_currency_value dim_currency_value ON fact.dim_currency_value_id = dim_currency_value.id
+    ORDER BY dim_date.year, dim_date.month, dim_country.name, dim_locality.name, dim_commodity.name
     """
 
 

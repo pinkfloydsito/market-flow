@@ -3,7 +3,7 @@ from data_loader import get_filtered_data_by_country_and_product, load_data
 from forecast_utils import calculate_forecast_periods, forecast_market_prices
 from visualization import plot_top_markets
 
-st.title("Market Flow - Markets")
+st.title("Markets Overview")
 
 # Load data
 df = load_data()
