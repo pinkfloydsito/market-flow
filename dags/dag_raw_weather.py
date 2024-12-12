@@ -1,33 +1,21 @@
-import pandas as pd
 import os
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from datetime import datetime, timedelta
 import duckdb
 import logging
-from pendulum import local
+import time
+import pandas as pd
+
+from datetime import datetime, timedelta
+
+from airflow import DAG
+from airflow.operators.python import PythonOperator
 
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
 
-
-import time
 
 from api.weather_api import WeatherAPI
+from utils.date_utils import get_start_end_dates
 
 logger = logging.getLogger("airflow.task")
-
-
-def get_start_end_dates(year, month):
-    start_date = datetime(year, month, 1)
-
-    if month == 12:
-        end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = datetime(year, month + 1, 1) - timedelta(days=1)
-
-    return start_date, end_date
-
 
 api = WeatherAPI()
 
@@ -42,7 +30,6 @@ default_args = {
 }
 
 
-# TODO: Impute missing years.
 def get_localities():
     """Fetch localities with latitude and longitude."""
     conn = duckdb.connect(DUCKDB_FILE)
