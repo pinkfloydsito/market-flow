@@ -438,3 +438,4 @@ testing.*
 units.csv
 db/*.csv
 
+cached_models/

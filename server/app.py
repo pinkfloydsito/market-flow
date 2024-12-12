@@ -1,34 +1,33 @@
 import streamlit as st
-import duckdb
+import pandas as pd
 
-DUCKDB_PATH = "/app/db/analytics.duckdb.bak7"
+
+from constants import CSV_PATH
+
+
+st.set_page_config(
+    page_title="Market Flow",
+    page_icon="🧊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        "Get Help": "https://www.github.com/pinkfloydsito",
+        "Report a bug": "https://www.github.com/market_flow/issues",
+        "About": "# This is an *extremely* great app!",
+    },
+)
+
+pg = st.navigation(
+    [
+        st.Page("./pages/dataset_viewer.py", title="Dataset Viewer"),
+        st.Page("./pages/best_products.py"),
+        st.Page("./pages/forecasting.py"),
+        st.Page("./pages/markets.py"),
+    ]
+)
+pg.run()
 
 
 @st.cache_resource
-def get_duckdb_connection(db_path=DUCKDB_PATH):
-    return duckdb.connect(database=db_path, read_only=True)
-
-
-# Query the fact_transactions table
-def fetch_transactions(con):
-    query = "SELECT * FROM public.fact_transaction LIMIT 100"
-    return con.execute(query).fetchdf()
-
-
-def fetch_weather(con):
-    query = "SELECT * FROM public.dim_weather LIMIT 100"
-    return con.execute(query).fetchdf()
-
-
-st.title("Fact Transactions Viewer")
-st.sidebar.header("Options")
-db_path = st.sidebar.text_input("DuckDB Path", DUCKDB_PATH)
-
-if db_path:
-    con = get_duckdb_connection(db_path)
-    st.write("Connected to:", db_path)
-    transactions = fetch_transactions(con)
-    st.write(transactions)
-
-    weather = fetch_weather(con)
-    st.write(weather)
+def load_csv(db_path=CSV_PATH):
+    return pd.read_csv(db_path)

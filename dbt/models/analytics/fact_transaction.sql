@@ -31,7 +31,7 @@ adjusted_transactions AS (
         *,
         CASE
             WHEN unit_in_kg IS NOT NULL AND unit_in_kg > 0 THEN price / unit_in_kg
-            ELSE NULL
+            ELSE price
         END AS price_per_kg
     FROM base_transactions
 ),
@@ -63,7 +63,6 @@ transactions_with_currency_value AS (
     INNER JOIN {{ ref('dim_currency_value') }} cv
     ON tw.currency_id = cv.currency_id
     WHERE tw.year = cv.year AND tw.month = cv.month AND cv.value IS NOT NULL
-
 )
 
 SELECT
@@ -71,7 +70,7 @@ SELECT
     market_id as dim_market_id,
     commodity_id as dim_commodity_id,
     currency_id as dim_currency_id,
-    currency_value_id,
+    currency_value_id as dim_currency_value_id,
     unit_id as dim_unit_id,
     dim_date_id,
     weather_id as dim_weather_id,

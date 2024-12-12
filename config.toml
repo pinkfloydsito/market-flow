@@ -3,3 +3,4 @@
 
 # local development:
 runOnSave = true
+base="light"

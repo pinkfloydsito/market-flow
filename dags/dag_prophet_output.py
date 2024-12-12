@@ -15,8 +15,11 @@ duckdb_path = os.getenv("DUCKDB_FILE")
 
 def sql():
     return """
-    SELECT fact.price_per_kg,
+    SELECT 
     fact.price, 
+    fact.price_per_kg,
+    fact.price/dim_currency_value.value as price_usd, 
+    fact.price_per_kg/dim_currency_value.value as price_per_kg_usd, 
     dim_date.year, 
     dim_date.month, 
     1 AS day, 
@@ -27,13 +30,18 @@ def sql():
     dim_locality.longitude as longitude,
     dim_country.name as country,
     dim_weather.avg_temperature as temperature,
-    dim_weather.precipitation as precipitation
+    dim_weather.precipitation as precipitation,
+    dim_commodity.name as product_name,
+    dim_currency.name as currency_name
     FROM public.fact_transaction fact
     INNER JOIN public.dim_market dim_market ON fact.dim_market_id = dim_market.id
     INNER JOIN public.dim_date dim_date ON fact.dim_date_id = dim_date.id
     INNER JOIN public.dim_locality dim_locality ON fact.dim_locality_id = dim_locality.id
     INNER JOIN public.dim_country dim_country ON dim_locality.country_id = dim_country.id
-    INNER JOIN public.dim_weather dim_weather ON fact.dim_weather_id = dim_weather.id;
+    INNER JOIN public.dim_weather dim_weather ON fact.dim_weather_id = dim_weather.id
+    INNER JOIN public.dim_commodity dim_commodity ON fact.dim_commodity_id = dim_commodity.id
+    INNER JOIN public.dim_currency dim_currency ON fact.dim_currency_id = dim_currency.id
+    INNER JOIN public.dim_currency_value dim_currency_value ON fact.dim_currency_value_id = dim_currency_value.id;
     """
 
 
