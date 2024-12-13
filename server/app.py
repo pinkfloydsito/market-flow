@@ -2,9 +2,6 @@ import streamlit as st
 import pandas as pd
 
 
-from constants import CSV_PATH
-
-
 st.set_page_config(
     page_title="Market Flow",
     page_icon="🧊",
@@ -28,8 +25,3 @@ pg = st.navigation(
     ]
 )
 pg.run()
-
-
-@st.cache_resource
-def load_csv(db_path=CSV_PATH):
-    return pd.read_csv(db_path)

@@ -6,7 +6,8 @@ import pandas as pd
 
 def plot_top_markets(market_prices, selected_product, selected_country):
     best_markets_df = pd.DataFrame(
-        market_prices, columns=["Market", "Avg_Forecasted_Price"]
+        market_prices,
+        columns=["Market", "Avg_Forecasted_Price"],  # type: ignore
     )
 
     # XXX: Sometimes predictions can go below (0.0),
@@ -16,7 +17,7 @@ def plot_top_markets(market_prices, selected_product, selected_country):
     top_df = filtered_df.head(10)
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    sns.barplot(data=top_df, x="Avg_Forecasted_Price", y="Market", ax=ax)
+    sns.barplot(data=top_df, x="Avg_Forecasted_Price", y="Market", ax=ax)  # type: ignore
     ax.set_title(
         f"Top 10 Markets with Lowest Forecasted {selected_product} Prices in {selected_country}"
     )

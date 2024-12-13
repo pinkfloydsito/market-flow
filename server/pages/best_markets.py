@@ -1,3 +1,4 @@
+import numpy as np
 import streamlit as st
 from data_loader import get_filtered_data_by_country_and_product, load_data
 from forecast_utils import calculate_forecast_periods, forecast_market_prices
@@ -5,16 +6,14 @@ from visualization import plot_top_markets
 
 st.title("Markets Overview")
 
-# Load data
 df = load_data()
 
-# Select Country
+# filters
 country_list = df["country"].unique().tolist()
 selected_country = st.selectbox("Select Country", country_list)
 
-# Filter and get product list
 country_df = df[df["country"] == selected_country]
-product_list = country_df["product_name"].unique().tolist()
+product_list = np.unique(country_df["product_name"]).tolist()
 selected_product = st.selectbox("Select Product", product_list)
 
 # Get filtered data

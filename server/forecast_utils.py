@@ -19,20 +19,18 @@ def get_model_path(key):
 
 
 def prepare_prophet_data(df):
-    prophet_df = df[["constructed_date", "price_per_kg"]].rename(
-        columns={"constructed_date": "ds", "price_per_kg": "y"}
+    prophet_df = df[["constructed_date", "price_per_kg_usd"]].rename(
+        columns={"constructed_date": "ds", "price_per_kg_usd": "y"}
     )
-    prophet_df["cap"] = 100
-    prophet_df["floor"] = 0
     return prophet_df
 
 
 def create_prophet_model():
     return Prophet(
-        yearly_seasonality=True,
-        weekly_seasonality=True,
-        daily_seasonality=False,
-        growth="logistic",
+        weekly_seasonality=True,  # type: ignore
+        yearly_seasonality=True,  # type: ignore
+        daily_seasonality=False,  # type: ignore
+        # growth="logistic",
     )
 
 
@@ -50,11 +48,12 @@ def process_market(market, filtered_df, country, product, periods):
         return None
 
     prophet_df = prepare_prophet_data(temp_df)
-    model = load_or_train_model(prophet_df, country, product, market)
+    prophet_df.to_csv("prophet_df.csv")
+    model = load_or_train_model(
+        prophet_df, country=country, product=product, market=market
+    )
 
     future = model.make_future_dataframe(periods=periods)
-    future["cap"] = 100
-    future["floor"] = 0
 
     forecast = model.predict(future)
     avg_forecast_price = forecast["yhat"].mean()
@@ -78,7 +77,7 @@ def forecast_market_prices(filtered_df, periods, country, product):
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
             if result is not None:
-                market_prices.append(result)
+                market_prices.append(result)  # type: ignore
 
     return market_prices
 
@@ -99,7 +98,7 @@ def forecast_best_products(df, country, locality=None, top_n=10):
         return None, None
 
     all_products = filtered_df["product_name"].unique()
-    product_prices = []
+    product_prices: List[Tuple[str, float]] = []
 
     for product in all_products:
         temp_df = filtered_df[filtered_df["product_name"] == product]
@@ -108,23 +107,23 @@ def forecast_best_products(df, country, locality=None, top_n=10):
             prophet_df = prepare_prophet_data(temp_df)
 
             # Load or train model
-            model = load_or_train_model(prophet_df, country, product, locality or "all")
+            model = load_or_train_model(
+                prophet_df, country=country, product=product, locality=locality or "all"
+            )
 
             # Calculate periods
             periods = calculate_forecast_periods(temp_df)
 
             future = model.make_future_dataframe(periods=periods)
-            future["cap"] = 100
-            future["floor"] = 0
 
-            forecast = model.predict(future)
-            avg_price = forecast["yhat"].mean()
+            forecast = model.predict(future, vectorized=False)
+            avg_price = float(forecast["yhat"].mean())
             product_prices.append((product, avg_price))
 
     product_prices = sorted(product_prices, key=lambda x: x[1])
     best_products_df = pd.DataFrame(
         product_prices,
-        columns=[
+        columns=[  # type: ignore
             "Product",
             f"Avg_Forecasted_Price({currency_name})",
         ],
@@ -140,8 +139,10 @@ def forecast_best_products(df, country, locality=None, top_n=10):
     return filtered_df, filtered_df.head(top_n), currency_name
 
 
-def load_or_train_model(prophet_df, country, product, market):
-    model_path = get_model_path(f"{country}_{product}_{market}")
+def load_or_train_model(
+    prophet_df, locality=None, country=None, product=None, market=None
+):
+    model_path = get_model_path(f"{country}_{locality}_{product}_{market}")
 
     # Check if we have a cached model
     if os.path.exists(model_path):
