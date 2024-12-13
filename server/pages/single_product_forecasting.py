@@ -1,27 +1,29 @@
+from typing import Optional
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from forecast_utils import calculate_forecast_periods
+from forecast_utils import calculate_forecast_periods, load_or_train_model
 from data_loader import load_data
 from prophet import Prophet
 from prophet.plot import plot_components_plotly
 
 
-def create_forecast(df, product_name, location_name, location_type="country"):
+def create_forecast_view(
+    df, product_name: str, country: Optional[str] = None, locality: Optional[str] = None
+):
     """
     Create forecast for a specific product and location
     """
+
+    location_name = country if locality is None else locality
     with st.spinner(f"Generating forecast for {product_name} in {location_name}..."):
         prophet_df = df[["constructed_date", "price_per_kg_usd"]].rename(
             columns={"constructed_date": "ds", "price_per_kg_usd": "y"}
         )
 
-        model = Prophet(
-            yearly_seasonality=True,
-            weekly_seasonality=True,
-            daily_seasonality=False,
+        model = load_or_train_model(
+            prophet_df, product=product_name, country=country, locality=locality
         )
-        model.fit(prophet_df)
 
         periods = calculate_forecast_periods(df)
         future = model.make_future_dataframe(periods=periods)
@@ -84,6 +86,7 @@ def main():
         analysis_type = st.radio(
             "Select Analysis Type",
             ["Single Location", "Multi-Location Comparison", "All Countries Overview"],
+            index=2,
         )
 
         # Set location type and get selected locations
@@ -164,7 +167,7 @@ def main():
 
         # Generate forecast
         if st.button("Generate Forecast"):
-            model, forecast = create_forecast(
+            model, forecast = create_forecast_view(
                 filtered_df, selected_product, selected_location, location_type
             )
 
@@ -213,7 +216,7 @@ def main():
                 location_df = filtered_df[filtered_df[location_type] == location]
                 if len(location_df) > 0:
                     with st.expander(f"Forecast for {location}"):
-                        model, forecast = create_forecast(
+                        model, forecast = create_forecast_view(
                             location_df, selected_product, location, location_type
                         )
 
@@ -241,9 +244,11 @@ def main():
             .reset_index()
         )
 
-        tab1, tab2 = st.tabs(["Price Trends", "Summary Statistics"])
+        tab_price_trends, tab_summary, tab_forecasting = st.tabs(
+            ["Price Trends", "Summary Statistics", "Forecasting"]
+        )
 
-        with tab1:
+        with tab_price_trends:
             st.plotly_chart(
                 plot_price_comparison(
                     country_prices,
@@ -254,7 +259,7 @@ def main():
                 use_container_width=True,
             )
 
-        with tab2:
+        with tab_summary:
             summary_stats = (
                 filtered_df.groupby("country")
                 .agg({"price_per_kg_usd": ["mean", "std", "min", "max"]})
@@ -266,7 +271,7 @@ def main():
                 "Min Price",
                 "Max Price",
             ]
-            summary_stats = summary_stats.sort_values("Average Price")
+            summary_stats = summary_stats.sort_values("Average Price")  # type: ignore
 
             st.dataframe(summary_stats, use_container_width=True)
 
@@ -277,6 +282,22 @@ def main():
                 f"summary_stats_{selected_product}.csv",
                 "text/csv",
             )
+
+        with tab_forecasting:
+            if st.button("Generate Forecast"):
+                print(filtered_df.head())
+                model, forecast = create_forecast_view(
+                    filtered_df, product_name=selected_product
+                )
+                st.subheader("Forecast Summary")
+                summary_df = forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]].tail(
+                    400
+                )
+                summary_df.columns = ["Date", "Predicted", "Lower Bound", "Upper Bound"]
+                st.dataframe(summary_df)
+                st.subheader("Forecast Components")
+                fig_components = plot_components_plotly(model, forecast)
+                st.plotly_chart(fig_components)
 
 
 main()

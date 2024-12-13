@@ -10,11 +10,9 @@ st.title("Best Products Overview")
 
 df = load_data()
 
-# Select Country
 country_list = df["country"].unique().tolist()
 selected_country = st.selectbox("Select Country", country_list)
 
-# Optional locality selection
 show_locality = st.checkbox("Filter by specific locality")
 selected_locality = None
 
@@ -34,7 +32,7 @@ if st.button("Show Best Products"):
             # Create visualization
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.barplot(
-                data=top_df,
+                data=top_df,  # type: ignore
                 x=f"Avg_Forecasted_Price({currency_name})",
                 y="Product",
                 ax=ax,
