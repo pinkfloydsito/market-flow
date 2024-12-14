@@ -51,7 +51,7 @@ def get_missing_currency_data(**context):
             AND mp_month IS NOT NULL
     ),
     existing_currencies AS (
-        SELECT year, month 
+        SELECT DISTINCT year, month 
         -- SELECT currency_code
         FROM raw.currencies_historical
     )
@@ -60,7 +60,7 @@ def get_missing_currency_data(**context):
     LEFT JOIN existing_currencies ec 
         ON nc.year = ec.year 
         AND nc.month = ec.month
-        AND nc.year >= 2000
+    WHERE ec.year is NULL
     ORDER BY nc.year DESC, nc.month DESC -- XXX: Might need to limit this
     """
     df = db.execute(query).df()
@@ -141,6 +141,7 @@ def fetch_missing_currencies(**context):
                         finally:
                             db.close()
 
+                logger.info(f"Storing data {data_in_tuples} in DuckDB")
                 store_data_in_duckdb(data_in_tuples)
 
                 processed_dates.add(date_key)
