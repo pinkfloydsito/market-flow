@@ -7,4 +7,3 @@ prophet==1.1.6
 seaborn==0.13.2
 joblib==1.4.2
 python-dotenv==1.0.1
-pandas-stubs==2.2.3.241126

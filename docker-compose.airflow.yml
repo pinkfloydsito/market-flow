@@ -88,6 +88,7 @@ x-airflow-common:
     - ./api:/opt/airflow/api
     - ./utils:/opt/airflow/utils
     - ./db:/opt/airflow/db
+    - ./data:/opt/airflow/data
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on

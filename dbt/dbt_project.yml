@@ -1,23 +1,14 @@
-name: market_flow
-version: 1.0.0
-
-profile: market_flow
+name: 'market_flow'
+version: '1.0.0'
 config-version: 2
-
-target-path: "target"
+profile: 'market_flow'
 
 model-paths: ["models"]
-
 seed-paths: ["seeds"]
-
 test-paths: ["tests"]
 
-models:
-  market_flow:
-    core:
-      +materialized: table
-    raw:
-      +materialized: table
-    analytics:
-      +materialized: table
-log-path: logs
+target-path: "target"
+log-path: "logs"
+clean-targets:
+  - "target"
+  - "dbt_packages"
