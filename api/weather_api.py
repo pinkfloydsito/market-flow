@@ -1,12 +1,15 @@
 import requests
 import pandas as pd
 from datetime import datetime
+from utils.date_utils import get_start_end_dates
 
 import openmeteo_requests
 
 import requests_cache
 from retry_requests import retry
+import logging
 
+logger = logging.getLogger("airflow.task")
 cache_session = requests_cache.CachedSession(".cache", expire_after=3600)
 retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
@@ -23,14 +26,19 @@ class WeatherAPI:
         self,
         latitude: float,
         longitude: float,
-        start_date: datetime,
-        end_date: datetime,
+        year: int,
         month: int,
     ) -> pd.DataFrame:
         """
         Fetch weather data for given coordinates and date range.
         Returns a pandas DataFrame with aggregated monthly data.
         """
+        start_date, end_date = get_start_end_dates(year, month)
+
+        print(
+            f"Fetching weather data for {latitude}, {longitude} in {year}-{month}, {start_date} to {end_date} {start_date.strftime("%Y-%m-%d")}, {end_date.strftime("%Y-%m-%d")}"
+        )
+
         params = {
             "latitude": latitude,
             "longitude": longitude,

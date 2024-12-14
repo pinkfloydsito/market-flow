@@ -1,0 +1,11 @@
+version: 2
+sources:
+  - name: staging
+    schema: staging
+    tables:
+      - name: stg_transactions
+        description: WFP data as transactions
+      - name: stg_units
+        description: units of each product
+      - name: stg_cleaned_units
+        description: Cleaned units
