@@ -13,25 +13,25 @@ WITH country_union AS (
         iso3,
         1 AS has_hdi,
         0 AS has_wfp
-        FROM {{ ref('cleaned_hdi') }}
+        FROM {{ source('raw', 'hdi') }}
 
     UNION
 
     SELECT
         DISTINCT 
         CASE
-            WHEN adm0_name = 'Iran (Islamic Republic of)' THEN 'Iran'
-            WHEN adm0_name = 'State of Palestine' THEN 'Palestine'
+            WHEN country_name = 'Iran (Islamic Republic of)' THEN 'Iran'
+            WHEN country_name = 'State of Palestine' THEN 'Palestine'
             ELSE TRIM(
                 REGEXP_REPLACE(
-                    REGEXP_REPLACE(adm0_name, '[^a-zA-Z0-9\s''\-\(\)]', ''),
+                    REGEXP_REPLACE(country_name, '[^a-zA-Z0-9\s''\-\(\)]', ''),
                     '\s+', ' '
                 )
             ) END AS name,
         NULL AS iso3,
         0 AS has_hdi,
         1 AS has_wfp
-        FROM {{ ref('cleaned_wfp') }}
+        FROM {{ ref('stg_transactions') }}
 ),
 deduplicated_countries AS (
     SELECT 

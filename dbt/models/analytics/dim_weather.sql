@@ -1,27 +1,21 @@
 {{ config(materialized='table') }}
 
---     loc.id as locality_id,
---     loc.latitude,
---     loc.longitude,
---     wfp.mp_year AS year,
---     wfp.mp_month AS month,
---     NULL AS avg_temperature,
---     NULL AS precipitation,
---     NULL AS wind_speed
-
 SELECT
-    ROW_NUMBER() OVER () AS id,
-    weather.locality_id,
-    weather.latitude,
-    weather.longitude,
+    weather.id as id,
+    locality_id,
+    dim_year.id as dim_year_id,
+    dim_month.id as month_id,
     dim_date.id as dim_date_id,
-    weather.year,
-    weather.month,
-    weather.avg_temperature,
-    weather.precipitation,
-    weather.wind_speed
-FROM {{ ref('raw_weather') }} weather
+    latitude,
+    longitude,
+    temperature,
+    precipitation
+FROM {{ ref('stg_weather') }} weather
+JOIN {{ ref('dim_year') }} dim_year 
+    ON weather.year = dim_year.name
+JOIN {{ ref('dim_month') }} dim_month
+    ON weather.month = dim_month.name
 JOIN {{ ref('dim_date') }} dim_date
-    ON weather.year = dim_date.year
-    AND weather.month = dim_date.month
-ORDER BY dim_date.id, weather.locality_id
+    ON dim_month.id = dim_date.month_id
+    AND dim_year.id = dim_date.year_id
+ORDER BY dim_year.id, dim_month.id, weather.locality_id

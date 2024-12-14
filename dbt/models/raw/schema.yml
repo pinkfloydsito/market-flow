@@ -15,3 +15,5 @@ sources:
       - name: weather
         loaded_at_field: created_at
         description: weather combination for every coordinate
+      - name: currencies_historical
+        description: historical value of coin based on USD
