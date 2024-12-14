@@ -29,19 +29,19 @@ def sql():
     dim_locality.latitude as latitude,
     dim_locality.longitude as longitude,
     dim_country.name as country,
-    dim_weather.avg_temperature as temperature,
-    dim_weather.precipitation as precipitation,
+    dim_weather.temperature,
+    dim_weather.precipitation,
     dim_commodity.name as product_name,
     dim_currency.name as currency_name
-    FROM public.fact_transaction fact
-    INNER JOIN public.dim_market dim_market ON fact.dim_market_id = dim_market.id
-    INNER JOIN public.dim_date dim_date ON fact.dim_date_id = dim_date.id
-    INNER JOIN public.dim_locality dim_locality ON fact.dim_locality_id = dim_locality.id
-    INNER JOIN public.dim_country dim_country ON dim_locality.country_id = dim_country.id
-    INNER JOIN public.dim_weather dim_weather ON fact.dim_weather_id = dim_weather.id
-    INNER JOIN public.dim_commodity dim_commodity ON fact.dim_commodity_id = dim_commodity.id
-    INNER JOIN public.dim_currency dim_currency ON fact.dim_currency_id = dim_currency.id
-    INNER JOIN public.dim_currency_value dim_currency_value ON fact.dim_currency_value_id = dim_currency_value.id
+    FROM raw.fact_transaction fact
+    INNER JOIN raw.dim_market dim_market ON fact.dim_market_id = dim_market.id
+    INNER JOIN raw.dim_date dim_date ON fact.dim_date_id = dim_date.id
+    INNER JOIN raw.dim_locality dim_locality ON fact.dim_locality_id = dim_locality.id
+    INNER JOIN raw.dim_country dim_country ON dim_locality.country_id = dim_country.id
+    INNER JOIN raw.dim_weather dim_weather ON fact.dim_weather_id = dim_weather.id
+    INNER JOIN raw.dim_commodity dim_commodity ON fact.dim_commodity_id = dim_commodity.id
+    INNER JOIN raw.dim_currency dim_currency ON fact.dim_currency_id = dim_currency.id
+    INNER JOIN raw.dim_currency_historical dim_currency_value ON fact.dim_currency_historical_id = dim_currency_value.id
     ORDER BY dim_date.year, dim_date.month, dim_country.name, dim_locality.name, dim_commodity.name
     """
 

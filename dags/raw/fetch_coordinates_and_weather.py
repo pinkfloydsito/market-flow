@@ -1,6 +1,7 @@
 import pandas as pd
 from airflow.utils.task_group import TaskGroup
 from airflow.decorators import task
+from utils.date_utils import get_start_end_dates
 from datetime import datetime, timedelta
 import time
 from typing import List, Dict
@@ -23,7 +24,7 @@ from dotenv import load_dotenv
 
 # Rate limits
 GEOCODE_CALLS_PER_MINUTE = 50
-WEATHER_CALLS_PER_MINUTE = 35
+# WEATHER_CALLS_PER_MINUTE = 2000
 
 load_dotenv()
 
@@ -112,8 +113,8 @@ def get_missing_localities():
         FROM raw.wfp t
         WHERE NOT EXISTS (
             SELECT 1 FROM raw.coordinates c
-            WHERE c.locality = t.adm0_name
-            AND c.country = t.adm1_name
+            WHERE c.locality = t.adm1_name
+            AND c.country = t.adm0_name
         )
     """
     results = conn.execute(sql).fetchall()
@@ -129,6 +130,8 @@ def geocode_location(locality: str, country: str) -> Dict:
 
     params = {"state": locality, "country": country, "format": "json"}
     data = send_geocoding_request(params)
+
+    logger.info(f"Checking data for '{locality}', '{country}': {data}")
 
     # XXX: workaround for missing locality (state)
     if not data:
@@ -146,7 +149,7 @@ def geocode_location(locality: str, country: str) -> Dict:
 
 
 @sleep_and_retry
-@limits(calls=WEATHER_CALLS_PER_MINUTE, period=60)
+# @limits(calls=WEATHER_CALLS_PER_MINUTE, period=60)
 def get_weather_api_data(lat: float, lng: float, year: int, month: int) -> Dict:
     """Weather API call with rate limiting and retries"""
 
@@ -198,8 +201,7 @@ def geocode_locality(locality: str, country: str):
         UPDATE raw.coordinates 
         SET 
             latitude = ?,
-            longitude = ?,
-            updated_at = CURRENT_TIMESTAMP
+            longitude = ?
         WHERE locality = ? AND country = ?
     """
 
@@ -225,6 +227,8 @@ def geocode_locality(locality: str, country: str):
             "latitude": coords["lat"],
             "longitude": coords["lng"],
         }
+    except Exception as e:
+        logger.error(f"Failed to store coordinates for {locality}, {country}: {str(e)}")
     finally:
         conn.close()
 
@@ -242,134 +246,78 @@ def fetch_location_weather(location: dict):
 
     Args:
         location (dict): Dictionary containing location details (latitude, longitude, locality (name), country)
+
+        sample structure:{'year': '2016', 'month': '9', 'latitude': 42.55502355, 'longitude': 74.62199103571582}
     """
 
     conn = duckdb.connect(duckdb_path)
     try:
         # Get all missing time periods for this location
-        sql = """
-            WITH existing_weather AS (
-                SELECT DISTINCT year, month 
-                FROM raw.weather
-                WHERE latitude = ? AND longitude = ?
-            )
-            SELECT DISTINCT mp_year, mp_month
-            FROM raw.wfp
-            WHERE adm1_name = ?
-            AND adm0_name = ?
-            AND CAST(mp_year AS INTEGER) > 2016 -- XXX: we need this for the API
-            AND NOT EXISTS (
-                SELECT 1 FROM existing_weather 
-                WHERE year = mp_year AND month = mp_month
-            )
-            ORDER BY mp_year, mp_month
-        """
 
-        params = [
-            location["latitude"],
-            location["longitude"],
-            location["locality"],
-            location["country"],
+        weather_data = []
+        # XXX: workound since we have missing historical data before 2017 in the api
+        year_to_use = 2017 if int(location["year"]) < 2017 else int(location["year"])
+
+        data = get_weather_api_data(
+            lat=location["latitude"],
+            lng=location["longitude"],
+            year=year_to_use,
+            month=int(location["month"]),
+        )
+
+        weather_data = {
+            **data,
+            "latitude": location["latitude"],
+            "longitude": location["longitude"],
+            "year": int(location["year"]),
+            "month": int(location["month"]),
+        }
+    except Exception as e:
+        logger.error(
+            f"Failed to fetch weather for {location} at {location['year']}: {str(e)}"
+        )
+        return
+
+    if weather_data:
+        columns_to_use = [
+            "temperature",
+            "precipitation",
+            "latitude",
+            "longitude",
+            "year",
+            "month",
         ]
 
-        # Execute query and fetch all results
-        time_periods = conn.execute(sql, params).fetchall()
-        # Convert to list of dicts for consistency
-        time_periods = [{"year": row[0], "month": row[1]} for row in time_periods]
+        weather_data_df = pd.DataFrame([weather_data])[columns_to_use]
+        weather_data_df.fillna(0, inplace=True)
 
-        # Process in batches
-        batches = batch_time_periods(time_periods, batch_size=10)
-        for batch in batches:
-            weather_data = []
-            for period in batch:
-                try:
-                    from utils.date_utils import get_start_end_dates
+        conn.execute(
+            """
+            CREATE TEMPORARY TABLE IF NOT EXISTS temp_weather AS 
+            SELECT * FROM weather_data_df """
+        )
 
-                    print(
-                        get_start_end_dates(int(period["year"]), int(period["month"]))
-                    )
+        try:
+            insert_sql = """
+                INSERT INTO raw.weather (latitude, longitude, year, month, temperature, precipitation)
+                SELECT latitude, longitude, year, month, temperature, precipitation FROM temp_weather 
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM raw.weather w 
+                    WHERE w.latitude = temp_weather.latitude 
+                    AND w.longitude = temp_weather.longitude
+                    AND w.year = temp_weather.year 
+                    AND w.month = temp_weather.month
+                )
+            """
+            conn.execute(insert_sql)
 
-                    # XXX: workound since we have missing historical data before 2017 in the api
-                    year_to_use = (
-                        2017 if int(period["year"]) < 2017 else int(period["year"])
-                    )
+        except Exception as e:
+            logger.info(f"Failed to insert data into temp_weather: {str(e)}")
 
-                    data = get_weather_api_data(
-                        lat=location["latitude"],
-                        lng=location["longitude"],
-                        year=year_to_use,
-                        month=int(period["month"]),
-                    )
-
-                    weather_data = {
-                        **data,
-                        "latitude": location["latitude"],
-                        "longitude": location["longitude"],
-                        "year": int(period["year"]),
-                        "month": int(period["month"]),
-                    }
-                except Exception as e:
-                    logger.error(
-                        f"Failed to fetch weather for {location} at {period}: {str(e)}"
-                    )
-
-                    continue
-
-                if weather_data:
-                    columns_to_use = [
-                        "temperature",
-                        "precipitation",
-                        "latitude",
-                        "longitude",
-                        "year",
-                        "month",
-                    ]
-
-                    weather_data_df = pd.DataFrame([weather_data])[columns_to_use]
-                    weather_data_df.fillna(0, inplace=True)
-
-                    logger.info(f"DF {weather_data_df}")
-                    # Create a temporary table for the batch insert
-                    # create_temp_table_sql = """
-                    #     CREATE TEMPORARY TABLE IF NOT EXISTS temp_weather AS
-                    #     SELECT * FROM raw.weather WHERE 1=0
-                    # """
-                    # Create and populate temp_weather table from DataFrame
-                    conn.execute(
-                        """
-                        CREATE TEMPORARY TABLE IF NOT EXISTS temp_weather AS 
-                        SELECT * FROM weather_data_df """
-                    )
-
-                    try:
-                        # Move data to main table and handle duplicates
-                        insert_sql = """
-                            INSERT INTO raw.weather (latitude, longitude, year, month, temperature, precipitation)
-                            SELECT latitude, longitude, year, month, temperature, precipitation FROM temp_weather 
-                            WHERE NOT EXISTS (
-                                SELECT 1 FROM raw.weather w 
-                                WHERE w.latitude = temp_weather.latitude 
-                                AND w.longitude = temp_weather.longitude
-                                AND w.year = temp_weather.year 
-                                AND w.month = temp_weather.month
-                            )
-                        """
-                        conn.execute(insert_sql)
-
-                    except Exception as e:
-                        logger.info(
-                            f"Failed to insert data into temp_weather: {str(e)}"
-                        )
-
-                # Clean up temporary table
-                conn.execute("DROP TABLE IF EXISTS temp_weather")
-
-    except Exception as e:
-        logger.error(f"Failed to process location {location}: {str(e)}")
-        raise
-
-    finally:
-        conn.close()
+        finally:
+            # Clean up temporary table
+            conn.execute("DROP TABLE IF EXISTS temp_weather")
+            conn.close()
 
 
 def get_localities_callable():
@@ -387,13 +335,52 @@ def process_localities_callable():
             process_locality(locality, i + j, len(localities))
 
 
+def process_weathers_callable():
+    """
+    Find coordinates and time periods where weather data is missing
+    Returns a DataFrame of missing records
+    """
+    query = """
+        WITH wfp_data AS (
+            SELECT DISTINCT 
+                wfp.mp_year as year,
+                wfp.mp_month as month,
+                c.latitude,
+                c.longitude
+            FROM raw.wfp wfp
+            JOIN raw.coordinates c
+            on c.locality = wfp.adm1_name
+            and c.country = wfp.adm0_name
+        )
+        SELECT 
+            w.year,
+            w.month,
+            w.latitude,
+            w.longitude
+        FROM wfp_data w
+        LEFT JOIN raw.weather rw 
+            ON w.latitude = rw.latitude 
+            AND w.longitude = rw.longitude
+            AND w.year = rw.year 
+            AND w.month = rw.month
+        WHERE rw.temperature IS NULL
+        ORDER BY w.year, w.month, w.latitude, w.longitude
+    """
+    duckdb_path: str = "db/analytics.duckdb"
+    con = duckdb.connect(duckdb_path)
+
+    missing_weathers = con.execute(query).df()
+    logger.info(f"Found {len(missing_weathers)} missing weather records")
+    for _, row in missing_weathers.iterrows():
+        fetch_location_weather(row.to_dict())
+
+
 def process_locality(locality, idx, total):
     logger.info(f"Processing locality {locality} ({idx+1}/{total})")
     coords = geocode_locality(locality["locality"], locality["country"])
     if not coords:
+        print(f"Failed to geocode {locality}")
         return
-
-    fetch_location_weather(coords)
 
 
 with DAG(
@@ -412,8 +399,12 @@ with DAG(
         task_id="get_localities", python_callable=get_localities_callable
     )
 
-    process_localities = PythonOperator(
-        task_id="process_localities", python_callable=process_localities_callable
+    # process_localities = PythonOperator(
+    #     task_id="process_localities", python_callable=process_localities_callable
+    # )
+
+    process_weathers = PythonOperator(
+        task_id="process_weathers", python_callable=process_weathers_callable
     )
 
     # with TaskGroup("process_locations") as process_locations:
@@ -434,5 +425,7 @@ with DAG(
     #                     },
     #                 )
 
-    create_tables >> get_localities >> process_localities
+    # create_tables >> get_localities >> process_localities >> process_weathers
+    create_tables >> get_localities >> process_weathers
+
     # process_localities
