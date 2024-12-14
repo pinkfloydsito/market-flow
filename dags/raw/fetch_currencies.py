@@ -51,7 +51,7 @@ def get_missing_currency_data(**context):
             AND mp_month IS NOT NULL
     ),
     existing_currencies AS (
-        SELECT currency_code, year, month 
+        SELECT year, month 
         -- SELECT currency_code
         FROM raw.currencies_historical
     )
@@ -61,8 +61,7 @@ def get_missing_currency_data(**context):
         ON nc.year = ec.year 
         AND nc.month = ec.month
         AND nc.year >= 2000
-    WHERE ec.currency_code IS NULL
-    ORDER BY nc.year ASC, nc.month ASC -- XXX: Might need to limit this
+    ORDER BY nc.year DESC, nc.month DESC -- XXX: Might need to limit this
     """
     df = db.execute(query).df()
     db.close()

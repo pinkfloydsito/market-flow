@@ -48,7 +48,7 @@ transactions_with_currency_historical AS (
         tw.*,
         cv.id AS currency_historical_id
     FROM transactions_with_weather tw
-    INNER JOIN {{ ref('dim_currency_historical') }} cv
+    LEFT JOIN {{ ref('dim_currency_historical') }} cv
     ON tw.currency_id = cv.currency_id
     WHERE tw.year = cv.year AND tw.month = cv.month AND cv.value IS NOT NULL
 )

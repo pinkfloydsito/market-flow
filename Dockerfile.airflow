@@ -11,3 +11,4 @@ RUN pip install scikit-learn
 RUN pip install "sqlframe[duckdb]"
 RUN pip install python-dotenv
 RUN pip install ratelimit backoff
+# RUN pip install apache-airflow-providers-apache-spark
