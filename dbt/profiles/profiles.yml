@@ -20,3 +20,4 @@ models:
     analytics:
       +materialized: table
       +schema: analytics
+

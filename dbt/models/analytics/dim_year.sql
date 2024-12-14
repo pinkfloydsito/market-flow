@@ -2,11 +2,11 @@
 
 WITH ranked_years AS (
     SELECT
-        ROW_NUMBER() OVER (ORDER BY mp_year) AS year_id, -- Auto-increment column
-        mp_year AS year
-    FROM {{ ref('cleaned_wfp') }}
-    WHERE mp_year IS NOT NULL
-    GROUP BY mp_year
+        ROW_NUMBER() OVER (ORDER BY year) AS year_id, -- Auto-increment column
+        year
+    FROM {{ ref('stg_transactions') }}
+    WHERE year IS NOT NULL
+    GROUP BY year
 )
 SELECT
     year_id AS id,

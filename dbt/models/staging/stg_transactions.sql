@@ -4,11 +4,20 @@ WITH transactions AS (
 
     SELECT
         mkt_id AS market_id,
+        mkt_name AS market_name,
+        pt_id AS market_type_id,
+        pt_name AS market_type_name,
         cm_id AS commodity_id,
+        cm_name AS commodity_name,
+        adm0_id AS country_id,
+        adm0_name AS country_name,
+        adm1_id AS locality_id,
+        adm1_name AS locality_name,
         cur_id AS currency_id,
+        cur_name AS currency_name,
         um_id AS unit_id,
-        mp_month AS month,
-        mp_year AS year,
+        CAST(mp_month AS INT) AS month,
+        CAST(mp_year AS INT) AS year,
         CAST(mp_price AS DOUBLE PRECISION) AS price,
         mp_commoditysource AS commodity_source
     FROM {{ source('raw', 'wfp') }}
@@ -51,8 +60,16 @@ adjusted_transactions AS (
 
 SELECT
     market_id,
+    market_name,
+    market_type_id,
+    market_type_name,
     commodity_id,
+    commodity_name,
+    country_name,
+    locality_id,
+    locality_name,
     currency_id,
+    currency_name,
     unit_id,
     unit_name,
     month,

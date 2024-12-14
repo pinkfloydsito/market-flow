@@ -2,34 +2,39 @@
 
 WITH dates AS (
     SELECT DISTINCT
-        mp_month as month,
-        mp_year as year
-    FROM {{ ref('cleaned_wfp') }}
+        month,
+        year
+    FROM {{ ref('stg_transactions') }}
 ),
 
 currencies AS (
     SELECT
-        id
-    FROM {{ ref('currencies') }}
+        id,
+        name
+    FROM {{ ref('stg_currencies') }}
 ),
 
 currency_date_combinations AS (
     SELECT
-        ROW_NUMBER() OVER () AS currency_value_id,
+        ROW_NUMBER() OVER () AS id,
         c.id as currency_id,
         d.year,
         d.month,
-        CAST(NULL AS FLOAT) AS curr_value
+        ch.value as value
     FROM currencies c
     CROSS JOIN dates d
+    INNER JOIN   {{ source('raw', 'currencies_historical') }} ch
+    ON ch.currency_code=c.name
+    AND ch.year=d.year
+    AND ch.month=d.month
 )
 
 SELECT
-    currency_value_id,
+    id,
     currency_id,
     year,
     month,
-    curr_value
+    value
 FROM currency_date_combinations
 ORDER BY currency_id, year, month
 

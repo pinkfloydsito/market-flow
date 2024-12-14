@@ -2,11 +2,11 @@
 
 WITH ranked_months AS (
     SELECT
-        ROW_NUMBER() OVER (ORDER BY mp_month) AS month_id,
-        mp_month AS month
-    FROM {{ ref('cleaned_wfp') }}
-    WHERE mp_month IS NOT NULL
-    GROUP BY mp_month
+        ROW_NUMBER() OVER (ORDER BY month) AS month_id,
+        month
+    FROM {{ ref('stg_transactions') }}
+    WHERE month IS NOT NULL
+    GROUP BY month
 )
 SELECT
     month_id AS id,

@@ -47,5 +47,5 @@ unit_conversions AS (
 SELECT
     unit_id,
     name,
-    CAST(unit_in_kg AS DOUBLE PRECISION) as value_in_kg
+    CAST(unit_in_kg AS DOUBLE PRECISION) as value_in_kg -- value of 1 single kg
 FROM unit_conversions

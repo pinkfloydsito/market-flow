@@ -113,7 +113,7 @@ def get_missing_localities():
         WHERE NOT EXISTS (
             SELECT 1 FROM raw.coordinates c
             WHERE c.locality = t.adm0_name
-            AND c.country = t.adm1_name LIMIT 2
+            AND c.country = t.adm1_name
         )
     """
     results = conn.execute(sql).fetchall()

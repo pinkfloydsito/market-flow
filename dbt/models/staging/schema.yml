@@ -9,3 +9,9 @@ sources:
         description: units of each product
       - name: stg_cleaned_units
         description: Cleaned units
+      - name: stg_commodities
+        description: Commodities list
+      - name: stg_countries
+        description: Countries list
+      - name: stg_currencies
+        description: Currencies list
