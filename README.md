@@ -87,5 +87,5 @@ Need to create the default fs connection. I used the following configurations:
 ![Demo](videos/demo.gif)
 
 ### Purpose and results
-See our [Wiki](https://github.com/pinkfloydsito/market-flow/Home.md) for more information.
+See our [Wiki](./Home.md) for more information.
 
