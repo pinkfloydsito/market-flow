@@ -36,8 +36,6 @@ This repository contains a project designed to analyze supermarket price trends 
 - Streamlit: Interactive data visualization and exploration.
 - Prophet: Time series forecasting tool for analyzing seasonal trends.
 
-### ETL Pipeline
-
 ### Makefile
 
 The Makefile includes commands for setting up and running the project:
@@ -82,26 +80,5 @@ Need to create this connection:
 
 8. Now we will run the full pipeline. It might take a few minutes
 ```bash
-run-full-pipeline:
-	@echo "Unpausing all DAGs..."
-	make unpause-all
-	@echo "Starting full pipeline execution..."
-	make trigger-ingestion
-	@echo "Waiting for ingestion to complete (2 minutes)..."
-	sleep 120
-	make trigger-fetch-currencies
-	@echo "Waiting for currency fetch to start (30s)..."
-	sleep 30
-	make trigger-raw-tables
-	@echo "Waiting for raw tables to start (30s)..."
-	sleep 30
-  make dbt-run
-  @echo "Waiting for dbt to complete (2 minutes)... (If the lock is not released, please run again this command (make dbt-run), maybe stop the DAGs in the UI and run again, you can re-run the whole stuff later after dbt has been completed)"
-  sleep 60
-	make trigger-coordinates
-	make trigger-currency
-	@echo "Waiting for imputations to complete (30s)..."
-	sleep 30
-	make trigger-prophet
-	@echo "Pipeline triggers completed"
+  make run-full-pipeline
 ```

@@ -6,8 +6,6 @@ AIRFLOW_HOST ?= localhost:8080
 
 DBT_CONTAINER := airflow-worker
 
-DBT_PROJECT_DIR := /opt/dbt_market_flow
-DBT_PROFILE := dbt_market_flow
 DBT_TARGET := dev
 
 .PHONY: help
@@ -28,7 +26,7 @@ help:
 
 DOCKER_AIRFLOW_CMD = docker compose -f $(COMPOSE_FILE) exec airflow-webserver airflow
 
-DOCKER_DBT_CMD = docker compose -f $(COMPOSE_FILE) exec dbt dbt
+DOCKER_DBT_CMD = docker compose -f $(COMPOSE_FILE) exec airflow-worker dbt 
 
 list-dags:
 	$(DOCKER_AIRFLOW_CMD) dags list
@@ -49,6 +47,14 @@ unpause-all:
 	$(DOCKER_AIRFLOW_CMD) dags unpause raw_data_ingestion
 	$(DOCKER_AIRFLOW_CMD) dags unpause raw_fetch_currencies
 
+pause-all:
+	$(DOCKER_AIRFLOW_CMD) dags pause coordinates_imputation
+	$(DOCKER_AIRFLOW_CMD) dags pause create_csv_for_prophet_dag
+	$(DOCKER_AIRFLOW_CMD) dags pause currency_imputation
+	$(DOCKER_AIRFLOW_CMD) dags pause raw_additional_tables
+	$(DOCKER_AIRFLOW_CMD) dags pause raw_data_ingestion
+	$(DOCKER_AIRFLOW_CMD) dags pause raw_fetch_currencies
+
 trigger-coordinates:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' coordinates_imputation
 
@@ -66,6 +72,29 @@ trigger-ingestion:
 
 trigger-fetch-currencies:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_fetch_currencies
+
+run-full-pipeline:
+	@echo "Unpausing all DAGs..."
+	make unpause-all
+	@echo "Starting full pipeline execution..."
+	make trigger-ingestion
+	@echo "Waiting for ingestion to complete (2 minutes)..."
+	sleep 120
+	make trigger-fetch-currencies
+	@echo "Waiting for currency fetch to start (30s)..."
+	sleep 30
+	make trigger-raw-tables
+	@echo "Waiting for raw tables to start (30s)..."
+	sleep 30
+	make dbt-run
+	@echo "Waiting for dbt to complete (2 minutes)... (If the lock is not released, please run again this command (make dbt-run), maybe stop the DAGs in the UI and run again, you can re-run the whole stuff later after dbt has been completed)"
+	sleep 120
+	make trigger-coordinates
+	make trigger-currency
+	@echo "Waiting for imputations to complete (30s)..."
+	sleep 30
+	make trigger-prophet
+	@echo "Pipeline triggers completed"
 
 dbt-run:
 	$(DOCKER_DBT_CMD) run
@@ -98,23 +127,3 @@ bash:
 .PHONY: logs
 logs:
 	docker compose -f $(COMPOSE_FILE) logs $(AIRFLOW_CONTAINER) -f
-
-dbt-run:
-	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt run --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles --target $(DBT_TARGET)
-	@echo "DBT models executed successfully."
-
-dbt-test:
-	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt test --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles --target $(DBT_TARGET)
-	@echo "DBT tests executed successfully."
-
-dbt-clean:
-	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt clean --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles
-	@echo "DBT target artifacts cleaned."
-
-dbt-docs-generate:
-	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt docs generate --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles --target $(DBT_TARGET)
-	@echo "DBT documentation generated."
-
-dbt-docs-serve:
-	docker-compose -f $(COMPOSE_FILE) exec $(DBT_CONTAINER) dbt docs serve --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROJECT_DIR)/profiles --target $(DBT_TARGET)
-	@echo "DBT documentation server is running."
