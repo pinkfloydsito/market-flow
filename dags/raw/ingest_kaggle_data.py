@@ -42,6 +42,50 @@ def wfp(csv_file_path: str) -> bool:
     return False
 
 
+def create_raw_additional_tables():
+    create_coordinates_table = """
+        CREATE TABLE IF NOT EXISTS raw.coordinates (
+            locality TEXT NOT NULL,
+            country TEXT NOT NULL,
+            latitude DOUBLE,
+            longitude DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY(locality, country)
+        );
+    """
+
+    create_weather_table = """
+        CREATE TABLE IF NOT EXISTS raw.weather (
+            latitude DOUBLE NOT NULL,
+            longitude DOUBLE NOT NULL,
+            year INTEGER NOT NULL,
+            month INTEGER NOT NULL,
+            temperature DOUBLE,
+            precipitation DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY(latitude, longitude, year, month)
+        );
+    """
+
+    create_currencies_historical = """
+    CREATE TABLE IF NOT EXISTS raw.currencies_historical (
+        currency_code VARCHAR,
+        year INTEGER,
+        month INTEGER,
+        value DOUBLE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """
+
+    con = duckdb.connect(duckdb_path)
+
+    con.execute(create_coordinates_table)
+    con.execute(create_weather_table)
+    con.execute(create_currencies_historical)
+
+    con.close()
+
+
 def table_exists(con, table_name: str) -> bool:
     tables = con.execute("""
         SELECT table_name 
@@ -130,7 +174,7 @@ def verify_raw_load(**context):
     tables = con.execute("""
         SELECT table_name 
         FROM information_schema.tables 
-        WHERE table_schema = 'raw'
+        WHERE table_schema = 'raw' and table_name like 'hdi%' or table_name like 'wfp%'
     """).fetchall()
 
     for (table,) in tables:
@@ -183,4 +227,8 @@ verify_raw = PythonOperator(
     dag=dag,
 )
 
-file_sensor_group >> ingest_raw >> verify_raw
+create_additional_tables = PythonOperator(
+    task_id="create_raw_additional_tables", python_callable=create_raw_additional_tables
+)
+
+file_sensor_group >> ingest_raw >> verify_raw >> create_additional_tables

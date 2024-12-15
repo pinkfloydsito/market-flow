@@ -58,14 +58,10 @@ The setup is done using docker, then we need to add the directories this way:
     RAW_DATA_PATH=/opt/airflow/data/raw
    ```
 2. Ensure Docker and Docker Compose are installed on your machine.
-3. Run the following commands to set up the project:
+3. Run the following commands to launch the docker containers:
    ```bash
    make up
    ```
-   ```
-
-1. 
-2. [Human Development Index Dataset](https://www.kaggle.com/datasets/iamsouravbanerjee/human-development-index-dataset/data)
 4. We need to download the data from the [Global Food Prices Dataset](https://www.kaggle.com/datasets/jboysen/global-food-prices) and [Human Development Index Dataset](https://www.kaggle.com/datasets/iamsouravbanerjee/human-development-index-dataset/data)
 5. Rename the Human Development Index Dataset to `hdi_(any pattern you prefer).csv` and the Global Food Prices Dataset to `wfp_(any pattern you prefer).csv` in the directory `data/raw`.
 
@@ -75,10 +71,15 @@ The setup is done using docker, then we need to add the directories this way:
    ```
 
 7. Enter in the Airflow UI and create a connection:
-Need to create this connection:
-  ![Connection Image](img/2024-12-15-02-36-18.png)
+Need to create the default fs connection. I used the following configurations:
+  ![Connection Image](screenshots/streamlit-1.png)
 
 8. Now we will run the full pipeline. It might take a few minutes
 ```bash
   make run-full-pipeline
 ```
+9. You can check the results of each task in the Airflow UI. The weather, and currency take a bit in get fully processed however after running the pipeline there should be enough information for the next step
+
+10. Now run `trigger-prophet` generate the csv based on the data we have until now.
+
+11. Open the browser and go to `localhost:8501` to see the Streamlit dashboard. You can train your models and check the actual data and forecast by yourself in any product, country, locality you choose. There are several features there available

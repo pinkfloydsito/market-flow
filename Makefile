@@ -67,6 +67,9 @@ trigger-currency:
 trigger-raw-tables:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_additional_tables
 
+make unpause-ingestion:
+	$(DOCKER_AIRFLOW_CMD) dags unpause raw_data_ingestion
+
 trigger-ingestion:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_data_ingestion
 
