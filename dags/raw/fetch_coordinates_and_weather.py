@@ -288,6 +288,7 @@ def fetch_location_weather(location: dict):
             "month",
         ]
 
+        logger.info(f"{weather_data}")
         weather_data_df = pd.DataFrame([weather_data])[columns_to_use]
         weather_data_df.fillna(0, inplace=True)
 

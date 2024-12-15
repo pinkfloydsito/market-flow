@@ -7,7 +7,6 @@ CUSTOM_USER_AGENT = "MarketFlow/1.0 (contact@ut.ee)"
 HEADERS = {"User-Agent": CUSTOM_USER_AGENT}
 
 logger = logging.getLogger("airflow.task")
-
 url = NOMINATIM_URL
 headers = HEADERS
 

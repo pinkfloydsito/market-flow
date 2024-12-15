@@ -9,29 +9,34 @@ This repository contains a project designed to analyze supermarket price trends 
 - **Identify seasonal pricing patterns:** Analyze how product prices vary by season and market.
 - **Impact of weather variations:** Measure the influence of seasonal weather changes (temperature, precipitation) on pricing.
 - **Currency fluctuations:** Assess the impact of exchange rate changes on commodity prices.
-- **Relationship between HDI and price volatility:** Explore how socio-economic factors, such as the Human Development Index (HDI), affect seasonal price changes.
+- **Relationship between HDI and price volatility:** Explore how socio-economic factors, such as the Human Development Index (HDI), affect seasonal price changes. [NOT DONE YET]
 
 ### Dataset Sources
 
 1. [Global Food Prices Dataset](https://www.kaggle.com/datasets/jboysen/global-food-prices)
 2. [Human Development Index Dataset](https://www.kaggle.com/datasets/iamsouravbanerjee/human-development-index-dataset/data)
-3. [OpenWeather API](https://openweathermap.org/api) - Weather and seasonal data
-4. [ExchangeRate API](https://www.exchangerate-api.com/) - Currency exchange data
+
+### APIs used to enrich data
+1. [OpenWeather API](https://openweathermap.org/api) - Weather and seasonal data
+2. [Currency API](https://currencyapi.com/) - Currency API
+3. [Nominatim API](https://nominatim.openstreetmap.org/search) - Nominatim API
 
 ---
 
-## Project Structure
+## Tools
 
-### Database Setup
+### Database
 
-- **PostgreSQL:** Used as the primary relational database for structured data.
 - **DuckDB:** Enables in-memory data analysis for rapid querying and lightweight aggregation.
 
-### ETL Pipeline
+### Orchestrator
+- Apache Airflow: Manages the ETL pipeline and automates data loading and transformation tasks.
 
-The ETL pipeline is managed using **Apache Airflow** with the following key DAGs:
-1. **`load_schema_from_file`:** Automates schema creation based on SQL files.
-2. **`csv_to_multiple_tables`:** Parses and loads CSV data into normalized tables.
+### Visualization - Upstream Output
+- Streamlit: Interactive data visualization and exploration.
+- Prophet: Time series forecasting tool for analyzing seasonal trends.
+
+### ETL Pipeline
 
 ### Makefile
 
@@ -44,9 +49,29 @@ The Makefile includes commands for setting up and running the project:
   - `make down`: Stop and clean up the Docker containers.
 
 ### Usage
-
-1. Ensure Docker and Docker Compose are installed on your machine.
-2. Run the following commands to set up the project:
+1. Run the command `cp .env.example .env` to create a new .env file.
+The setup is done using docker, then we need to add the directories this way:
+   ```bash
+    AIRFLOW_CONN_MARKET_FLOW=postgresql://airflow:airflow@postgres:5432/market_flow
+    PYTHONPATH=/opt/airflow
+    CURRENCY_API_KEY=[currencyapi.com key]
+    DUCKDB_FILE=/opt/airflow/db/analytics.duckdb
+    ML_DATA_FILE=/opt/airflow/db/ml_data.csv
+    RAW_DATA_PATH=/opt/airflow/data/raw
+   ```
+2. Ensure Docker and Docker Compose are installed on your machine.
+3. Run the following commands to set up the project:
    ```bash
    make up
-   make dags-trigger
+   ```
+   ```
+
+1. 
+2. [Human Development Index Dataset](https://www.kaggle.com/datasets/iamsouravbanerjee/human-development-index-dataset/data)
+4. We need to download the data from the [Global Food Prices Dataset](https://www.kaggle.com/datasets/jboysen/global-food-prices) and [Human Development Index Dataset](https://www.kaggle.com/datasets/iamsouravbanerjee/human-development-index-dataset/data)
+5. Rename the Human Development Index Dataset to `hdi_(any pattern you prefer).csv` and the Global Food Prices Dataset to `wfp_(any pattern you prefer).csv` in the directory `data/raw`.
+
+6. Trigger the ingestion DAG by running the following command:
+   ```bash
+    make trigger-ingestion         # Run raw_data_ingestion
+   ```

@@ -2,6 +2,8 @@ COMPOSE_FILE := docker-compose.airflow.yml
 AIRFLOW_CONTAINER := airflow-worker
 AIRFLOW_SCHEDULER := airflow-scheduler
 
+AIRFLOW_HOST ?= localhost:8080
+
 DBT_CONTAINER := airflow-worker
 
 DBT_PROJECT_DIR := /opt/dbt_market_flow
@@ -24,6 +26,59 @@ help:
 
 .PHONY: all up down exec start_dags
 
+DOCKER_AIRFLOW_CMD = docker compose -f $(COMPOSE_FILE) exec airflow-webserver airflow
+
+DOCKER_DBT_CMD = docker compose -f $(COMPOSE_FILE) exec dbt dbt
+
+list-dags:
+	$(DOCKER_AIRFLOW_CMD) dags list
+
+trigger-dag:
+	@if [ -z "$(DAG_ID)" ]; then \
+		echo "Error: DAG_ID is required. Usage: make trigger-dag DAG_ID=your_dag_id"; \
+		exit 1; \
+	fi
+	$(DOCKER_AIRFLOW_CMD) dags trigger $(DAG_ID)
+
+# Unpause all project DAGs
+unpause-all:
+	$(DOCKER_AIRFLOW_CMD) dags unpause coordinates_imputation
+	$(DOCKER_AIRFLOW_CMD) dags unpause create_csv_for_prophet_dag
+	$(DOCKER_AIRFLOW_CMD) dags unpause currency_imputation
+	$(DOCKER_AIRFLOW_CMD) dags unpause raw_additional_tables
+	$(DOCKER_AIRFLOW_CMD) dags unpause raw_data_ingestion
+	$(DOCKER_AIRFLOW_CMD) dags unpause raw_fetch_currencies
+
+trigger-coordinates:
+	$(DOCKER_AIRFLOW_CMD) dags trigger coordinates_imputation
+
+trigger-prophet:
+	$(DOCKER_AIRFLOW_CMD) dags trigger create_csv_for_prophet_dag
+
+trigger-currency:
+	$(DOCKER_AIRFLOW_CMD) dags trigger currency_imputation
+
+trigger-raw-tables:
+	$(DOCKER_AIRFLOW_CMD) dags trigger raw_additional_tables
+
+trigger-ingestion:
+	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_data_ingestion
+
+trigger-fetch-currencies:
+	$(DOCKER_AIRFLOW_CMD) dags trigger raw_fetch_currencies
+
+dbt-run:
+	$(DOCKER_DBT_CMD) run
+
+dbt-test:
+	$(DOCKER_DBT_CMD) test
+
+dbt-docs-generate:
+	$(DOCKER_DBT_CMD) docs generate
+
+dbt-docs-serve:
+	$(DOCKER_DBT_CMD) docs serve
+
 up:
 	docker-compose -f $(COMPOSE_FILE) up -d
 	@echo "Docker Compose is up and running."
@@ -39,17 +94,6 @@ down:
 .PHONY: bash
 bash:
 	docker-compose -f $(COMPOSE_FILE) exec airflow-scheduler bash
-
-dag-create-db:
-	docker-compose -f $(COMPOSE_FILE) exec $(AIRFLOW_CONTAINER) airflow dags trigger load_schema_from_file
-	@echo "Airflow DAG triggered: load_schema_from_file."
-
-dag-load-raw-data:
-	docker-compose -f $(COMPOSE_FILE) exec $(AIRFLOW_CONTAINER) airflow dags trigger csv_to_multiple_tables
-	@echo "Airflow DAG triggered: csv_to_multiple_tables."
-
-start_project: up start_dags
-	@echo "Project setup completed and DAGs triggered."
 
 .PHONY: logs
 logs:
