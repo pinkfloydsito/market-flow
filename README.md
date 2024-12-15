@@ -83,3 +83,5 @@ Need to create the default fs connection. I used the following configurations:
 10. Now run `trigger-prophet` generate the csv based on the data we have until now.
 
 11. Open the browser and go to `localhost:8501` to see the Streamlit dashboard. You can train your models and check the actual data and forecast by yourself in any product, country, locality you choose. There are several features there available
+
+![Demo](videos/demo.gif)
