@@ -71,7 +71,37 @@ The setup is done using docker, then we need to add the directories this way:
 4. We need to download the data from the [Global Food Prices Dataset](https://www.kaggle.com/datasets/jboysen/global-food-prices) and [Human Development Index Dataset](https://www.kaggle.com/datasets/iamsouravbanerjee/human-development-index-dataset/data)
 5. Rename the Human Development Index Dataset to `hdi_(any pattern you prefer).csv` and the Global Food Prices Dataset to `wfp_(any pattern you prefer).csv` in the directory `data/raw`.
 
-6. Trigger the ingestion DAG by running the following command:
+6. First we will unpause our DAGs in Airflow
    ```bash
-    make trigger-ingestion         # Run raw_data_ingestion
+    make unpause-all
    ```
+
+7. Enter in the Airflow UI and create a connection:
+Need to create this connection:
+  ![Connection Image](img/2024-12-15-02-36-18.png)
+
+8. Now we will run the full pipeline. It might take a few minutes
+```bash
+run-full-pipeline:
+	@echo "Unpausing all DAGs..."
+	make unpause-all
+	@echo "Starting full pipeline execution..."
+	make trigger-ingestion
+	@echo "Waiting for ingestion to complete (2 minutes)..."
+	sleep 120
+	make trigger-fetch-currencies
+	@echo "Waiting for currency fetch to start (30s)..."
+	sleep 30
+	make trigger-raw-tables
+	@echo "Waiting for raw tables to start (30s)..."
+	sleep 30
+  make dbt-run
+  @echo "Waiting for dbt to complete (2 minutes)... (If the lock is not released, please run again this command (make dbt-run), maybe stop the DAGs in the UI and run again, you can re-run the whole stuff later after dbt has been completed)"
+  sleep 60
+	make trigger-coordinates
+	make trigger-currency
+	@echo "Waiting for imputations to complete (30s)..."
+	sleep 30
+	make trigger-prophet
+	@echo "Pipeline triggers completed"
+```

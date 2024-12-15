@@ -50,22 +50,22 @@ unpause-all:
 	$(DOCKER_AIRFLOW_CMD) dags unpause raw_fetch_currencies
 
 trigger-coordinates:
-	$(DOCKER_AIRFLOW_CMD) dags trigger coordinates_imputation
+	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' coordinates_imputation
 
 trigger-prophet:
-	$(DOCKER_AIRFLOW_CMD) dags trigger create_csv_for_prophet_dag
+	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' create_csv_for_prophet_dag
 
 trigger-currency:
-	$(DOCKER_AIRFLOW_CMD) dags trigger currency_imputation
+	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' currency_imputation
 
 trigger-raw-tables:
-	$(DOCKER_AIRFLOW_CMD) dags trigger raw_additional_tables
+	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_additional_tables
 
 trigger-ingestion:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_data_ingestion
 
 trigger-fetch-currencies:
-	$(DOCKER_AIRFLOW_CMD) dags trigger raw_fetch_currencies
+	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_fetch_currencies
 
 dbt-run:
 	$(DOCKER_DBT_CMD) run

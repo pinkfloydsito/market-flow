@@ -400,9 +400,9 @@ with DAG(
         task_id="get_localities", python_callable=get_localities_callable
     )
 
-    # process_localities = PythonOperator(
-    #     task_id="process_localities", python_callable=process_localities_callable
-    # )
+    process_localities = PythonOperator(
+        task_id="process_localities", python_callable=process_localities_callable
+    )
 
     process_weathers = PythonOperator(
         task_id="process_weathers", python_callable=process_weathers_callable
@@ -426,7 +426,6 @@ with DAG(
     #                     },
     #                 )
 
-    # create_tables >> get_localities >> process_localities >> process_weathers
-    create_tables >> get_localities >> process_weathers
+    create_tables >> get_localities >> process_localities >> process_weathers
 
     # process_localities
