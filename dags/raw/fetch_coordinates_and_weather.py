@@ -1,3 +1,5 @@
+import random
+import math
 import pandas as pd
 from airflow.utils.task_group import TaskGroup
 from airflow.decorators import task
@@ -164,6 +166,19 @@ def get_weather_api_data(lat: float, lng: float, year: int, month: int) -> Dict:
         return {}
 
     result = result_df.iloc[0].to_dict()
+
+    # XXX: workaround if the other imputation did not work
+    year_to_use = random.randrange(2022, 2024)
+
+    if math.isnan(result.get("temperature_2m_max")):
+        result_df = weather_api_client.fetch_weather_data(
+            lat,
+            lng,
+            year_to_use,
+            month,
+        )
+        result = result_df.iloc[0].to_dict()
+
     return {
         "temperature": result["temperature_2m_max"],
         "precipitation": result["precipitation_hours"],
@@ -288,7 +303,6 @@ def fetch_location_weather(location: dict):
             "month",
         ]
 
-        logger.info(f"{weather_data}")
         weather_data_df = pd.DataFrame([weather_data])[columns_to_use]
         weather_data_df.fillna(0, inplace=True)
 

@@ -52,7 +52,7 @@ adjusted_transactions AS (
         CASE
         WHEN value_in_kg IS NOT NULL AND value_in_kg > 0 
           THEN price / value_in_kg
-          ELSE NULL
+          ELSE price
         END AS price_per_kg
     FROM transactions_with_units
 

@@ -113,17 +113,21 @@ make unpause-fetch-currencies:
 
 run-full-pipeline:
 	@echo "Unpausing all DAGs..."
-	make unpause-all
+	make unpause-ingestion
 	@echo "Starting full pipeline execution..."
 	make trigger-ingestion
-	@echo "Waiting for ingestion to complete (2 minutes)..."
-	sleep 120
-	make trigger-fetch-currencies
-	@echo "Waiting for currency fetch to start (30s)..."
-	sleep 30
+	@echo "Waiting for ingestion to complete (4 minutes)..."
+	sleep 240
 	make trigger-raw-tables
-	@echo "Waiting for raw tables to start (30s)..."
-	sleep 30
+	@echo "Waiting for raw tables to start (4 minutes)..."
+	sleep 240
+	make pause-raw-tables # we pause just in case the lock is not released
+	sleep 10
+	make trigger-fetch-currencies
+	@echo "Waiting for currency fetch to start (2 minutes)..."
+	sleep 240
+	make pause-fetch-currencies # we pause just in case the lock is not released
+	sleep 10
 	make dbt-run
 	@echo "Waiting for dbt to complete (2 minutes)... (If the lock is not released, please run again this command (make dbt-run), maybe stop the DAGs in the UI and run again, you can re-run the whole stuff later after dbt has been completed)"
 	sleep 120
@@ -131,6 +135,8 @@ run-full-pipeline:
 	make trigger-imputation-currency
 	@echo "Waiting for imputations to complete (30s)..."
 	sleep 30
+	make dbt-run
+	sleep 10
 	make trigger-prophet
 	@echo "Pipeline triggers completed"
 

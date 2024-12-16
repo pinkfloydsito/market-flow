@@ -34,6 +34,7 @@ class WeatherAPI:
         Returns a pandas DataFrame with aggregated monthly data.
         """
         start_date, end_date = get_start_end_dates(year, month)
+        print(start_date, end_date)
 
         print(
             f"Fetching weather data for {latitude}, {longitude} in {year}-{month}, {start_date} to {end_date} {start_date.strftime("%Y-%m-%d")}, {end_date.strftime("%Y-%m-%d")}"
