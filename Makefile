@@ -22,7 +22,7 @@ help:
 	@echo "  dbt-docs-generate    - Generate DBT documentation"
 	@echo "  dbt-docs-serve       - Serve DBT documentation"
 
-.PHONY: all up down exec start_dags
+.PHONY: all up down exec start_dags unpause-trigger-prophet pause-trigger-prophet pause-imputation-currency pause-imputation-currency 
 
 DOCKER_AIRFLOW_CMD = docker compose -f $(COMPOSE_FILE) exec airflow-webserver airflow
 
@@ -58,57 +58,57 @@ pause-all:
 trigger-prophet:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' create_csv_for_prophet_dag
 
-make pause-trigger-prophet:
+pause-trigger-prophet:
 	$(DOCKER_AIRFLOW_CMD) dags pause create_csv_for_prophet_dag
 
-make unpause-trigger-prophet:
+unpause-trigger-prophet:
 	$(DOCKER_AIRFLOW_CMD) dags unpause create_csv_for_prophet_dag
 
 trigger-imputation-currency:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' currency_imputation
 
-make pause-imputation-currency:
+pause-imputation-currency:
 	$(DOCKER_AIRFLOW_CMD) dags pause currency_imputation
 
-make unpause-imputation-currency:
+unpause-imputation-currency:
 	$(DOCKER_AIRFLOW_CMD) dags unpause currency_imputation
 
 trigger-imputation-coordinates:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' coordinates_imputation
 
-make pause-imputation-coordinates:
+pause-imputation-coordinates:
 	$(DOCKER_AIRFLOW_CMD) dags pause coordinates_imputation
 
-make unpause-imputation-coordinates:
+unpause-imputation-coordinates:
 	$(DOCKER_AIRFLOW_CMD) dags unpause coordinates_imputation
 
 trigger-raw-tables:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_additional_tables
 
-make pause-raw-tables:
+pause-raw-tables:
 	$(DOCKER_AIRFLOW_CMD) dags pause raw_additional_tables
 
-make unpause-raw-tables:
+unpause-raw-tables:
 	$(DOCKER_AIRFLOW_CMD) dags unpause raw_additional_tables
 
 # ingestion
 trigger-ingestion:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_data_ingestion
 
-make pause-ingestion:
+pause-ingestion:
 	$(DOCKER_AIRFLOW_CMD) dags pause raw_data_ingestion
 
-make unpause-ingestion:
+unpause-ingestion:
 	$(DOCKER_AIRFLOW_CMD) dags unpause raw_data_ingestion
 
 # raw currencies
 trigger-fetch-currencies:
 	$(DOCKER_AIRFLOW_CMD) dags trigger --conf '{"execute_now": true}' raw_fetch_currencies
 
-make pause-fetch-currencies:
+pause-fetch-currencies:
 	$(DOCKER_AIRFLOW_CMD) dags pause raw_fetch_currencies
 
-make unpause-fetch-currencies:
+unpause-fetch-currencies:
 	$(DOCKER_AIRFLOW_CMD) dags unpause raw_fetch_currencies
 
 run-full-pipeline:
